@@ -1,0 +1,6 @@
+{
+  "name": "온사운드 (ON:SOUND) - 뮤직 플랫폼",
+  "description": "실시간 음악 스트리밍, 싱크 가사, 비트 메이커 및 플레이리스트를 지원하는 올인원 노래 플랫폼",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
