@@ -15,6 +15,8 @@ import {
   Maximize2,
   Activity,
   Tv,
+  Infinity,
+  Disc,
 } from 'lucide-react';
 import { Visualizer } from './Visualizer';
 
@@ -28,6 +30,7 @@ interface PlayerBarProps {
   isLoop: boolean;
   isShuffle: boolean;
   isLiked: boolean;
+  isAutoplay?: boolean;
   onPlayPause: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -36,6 +39,7 @@ interface PlayerBarProps {
   onToggleMute: () => void;
   onToggleLoop: () => void;
   onToggleShuffle: () => void;
+  onToggleAutoplay?: () => void;
   onToggleLike: (trackId: string) => void;
   onOpenLyrics: () => void;
   onOpenQueue: () => void;
@@ -53,6 +57,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   isLoop,
   isShuffle,
   isLiked,
+  isAutoplay = true,
   onPlayPause,
   onPrev,
   onNext,
@@ -61,6 +66,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   onToggleMute,
   onToggleLoop,
   onToggleShuffle,
+  onToggleAutoplay,
   onToggleLike,
   onOpenLyrics,
   onOpenQueue,
@@ -222,6 +228,20 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             >
               <Repeat className="w-4 h-4" />
             </button>
+
+            {onToggleAutoplay && (
+              <button
+                onClick={onToggleAutoplay}
+                className={`p-1.5 transition-all cursor-pointer rounded-md ${
+                  isAutoplay
+                    ? 'text-cyan-400 bg-cyan-500/10 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+                    : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+                title={isAutoplay ? '자동 연속 재생 켜짐 (무한 스트리밍)' : '자동 연속 재생 꺼짐'}
+              >
+                <Infinity className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Seek Bar with Time labels */}
@@ -246,8 +266,18 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           </div>
         </div>
 
-        {/* Right: Audio Features (Visualizer, Cinema Stage, Lyrics, Queue, Volume) */}
+        {/* Right: Audio Features (Visualizer, Cinema Stage, LP Mode, Lyrics, Queue, Volume) */}
         <div className="flex items-center justify-end gap-2.5 w-1/4 min-w-[220px]">
+          {/* Quick LP Turntable Mode Button */}
+          <button
+            onClick={onOpenExpanded}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 rounded-lg transition-all cursor-pointer shadow-sm active:scale-95"
+            title="감성 LP 턴테이블 모드로 열기"
+          >
+            <Disc className={`w-3.5 h-3.5 text-rose-400 ${isPlaying ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">감성 LP</span>
+          </button>
+
           {/* Cinema Stage Shortcut */}
           {currentTrack.youtubeId && onOpenCinemaStage && (
             <button

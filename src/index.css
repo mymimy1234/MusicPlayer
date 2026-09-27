@@ -30,3 +30,169 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.22);
 }
+
+/* Cinema Mode Ambient & Emotional Lighting Animations */
+@keyframes ambient-pulse {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.1) translate(2%, -3%);
+  }
+}
+
+@keyframes ambient-pulse-slow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.15) rotate(5deg);
+  }
+}
+
+@keyframes light-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 20px) scale(0.95);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes spotlight-sway {
+  0%, 100% {
+    transform: rotate(-12deg) scaleY(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: rotate(12deg) scaleY(1.08);
+    opacity: 0.75;
+  }
+}
+
+@keyframes spotlight-sway-rev {
+  0%, 100% {
+    transform: rotate(12deg) scaleY(1.05);
+    opacity: 0.5;
+  }
+  50% {
+    transform: rotate(-12deg) scaleY(0.98);
+    opacity: 0.8;
+  }
+}
+
+@keyframes floating-dust {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(40px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.animate-ambient-pulse {
+  animation: ambient-pulse 8s ease-in-out infinite;
+}
+
+.animate-ambient-pulse-slow {
+  animation: ambient-pulse-slow 12s ease-in-out infinite;
+}
+
+.animate-light-drift {
+  animation: light-drift 16s ease-in-out infinite alternate;
+}
+
+.animate-spotlight-left {
+  animation: spotlight-sway 10s ease-in-out infinite alternate;
+}
+
+.animate-spotlight-right {
+  animation: spotlight-sway-rev 11s ease-in-out infinite alternate;
+}
+
+.animate-dust-1 {
+  animation: floating-dust 14s ease-in-out infinite;
+}
+.animate-dust-2 {
+  animation: floating-dust 18s ease-in-out 3s infinite;
+}
+.animate-dust-3 {
+  animation: floating-dust 22s ease-in-out 7s infinite;
+}
+
+/* Video On-Screen Cinematic Effects */
+@keyframes lens-flare-drift {
+  0%, 100% {
+    transform: translateX(-20%) translateY(-10%) rotate(-15deg) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateX(20%) translateY(10%) rotate(-5deg) scale(1.15);
+    opacity: 0.65;
+  }
+}
+
+@keyframes rain-streak {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(200%);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.02);
+  }
+}
+
+.animate-lens-flare {
+  animation: lens-flare-drift 12s ease-in-out infinite;
+}
+
+.animate-rain-streak-1 {
+  animation: rain-streak 2.4s linear infinite;
+}
+.animate-rain-streak-2 {
+  animation: rain-streak 3.1s linear 0.8s infinite;
+}
+.animate-rain-streak-3 {
+  animation: rain-streak 2.8s linear 1.5s infinite;
+}
+.animate-shimmer-pulse {
+  animation: shimmer-pulse 4s ease-in-out infinite;
+}
+
+

@@ -81,6 +81,10 @@ export default function App() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isLoop, setIsLoop] = useState<boolean>(false);
   const [isShuffle, setIsShuffle] = useState<boolean>(false);
+  const [isAutoplay, setIsAutoplay] = useState<boolean>(() => {
+    const saved = localStorage.getItem('onsound_autoplay');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [queue, setQueue] = useState<Track[]>(INITIAL_TRACKS);
 
   // Modals
@@ -103,6 +107,10 @@ export default function App() {
   }, [userCategories, currentUser]);
 
   // Persist state to localStorage
+  useEffect(() => {
+    localStorage.setItem('onsound_autoplay', JSON.stringify(isAutoplay));
+  }, [isAutoplay]);
+
   useEffect(() => {
     localStorage.setItem('onsound_yt_tracks', JSON.stringify(tracks));
   }, [tracks]);
@@ -224,7 +232,10 @@ export default function App() {
   }, [currentTrack, isPlaying]);
 
   const handleNextTrack = useCallback(() => {
-    if (queue.length === 0 || !currentTrack) return;
+    if (!currentTrack) {
+      if (queue.length > 0) handlePlayTrack(queue[0]);
+      return;
+    }
 
     if (isShuffle) {
       const remaining = queue.filter((t) => t.id !== currentTrack.id);
@@ -238,16 +249,33 @@ export default function App() {
     }
 
     const currentIndex = queue.findIndex((t) => t.id === currentTrack.id);
-    if (currentIndex === -1 || currentIndex === queue.length - 1) {
+    if (currentIndex === -1 || currentIndex >= queue.length - 1) {
       if (isLoop) {
         handlePlayTrack(queue[0]);
+      } else if (isAutoplay) {
+        // Smart Autoplay: find candidate from library not yet in current queue or history
+        const queueIds = new Set(queue.map((t) => t.id));
+        const unplayedCandidates = tracks.filter((t) => !queueIds.has(t.id) && t.id !== currentTrack.id);
+
+        if (unplayedCandidates.length > 0) {
+          // Prefer same artist or genre, or random candidate
+          const sameArtist = unplayedCandidates.filter((t) => t.artist === currentTrack.artist);
+          const nextTrack = sameArtist.length > 0 ? sameArtist[0] : unplayedCandidates[Math.floor(Math.random() * unplayedCandidates.length)];
+          setQueue((prev) => [...prev, nextTrack]);
+          handlePlayTrack(nextTrack);
+        } else if (queue.length > 0) {
+          // Loop queue seamlessly
+          handlePlayTrack(queue[0]);
+        } else if (tracks.length > 0) {
+          handlePlayTrack(tracks[0]);
+        }
       } else {
         setIsPlaying(false);
       }
     } else {
       handlePlayTrack(queue[currentIndex + 1]);
     }
-  }, [queue, currentTrack, isShuffle, isLoop, handlePlayTrack]);
+  }, [queue, currentTrack, isShuffle, isLoop, isAutoplay, tracks, handlePlayTrack]);
 
   const handlePrevTrack = useCallback(() => {
     if (queue.length === 0 || !currentTrack) return;
@@ -403,6 +431,7 @@ export default function App() {
         isMuted={isMuted}
         isLoop={isLoop}
         isShuffle={isShuffle}
+        isAutoplay={isAutoplay}
         isLiked={currentTrack ? likedTrackIds.includes(currentTrack.id) : false}
         onPlayPause={handlePlayPause}
         onPrev={handlePrevTrack}
@@ -412,6 +441,7 @@ export default function App() {
         onToggleMute={handleToggleMute}
         onToggleLoop={() => setIsLoop(!isLoop)}
         onToggleShuffle={() => setIsShuffle(!isShuffle)}
+        onToggleAutoplay={() => setIsAutoplay(!isAutoplay)}
         onToggleLike={handleToggleLike}
         onOpenLyrics={() => setIsLyricsOpen(true)}
         onOpenQueue={() => setIsQueueOpen(true)}
@@ -427,12 +457,14 @@ export default function App() {
           currentTime={currentTime}
           duration={currentTrack.duration || 180}
           isLiked={likedTrackIds.includes(currentTrack.id)}
+          isAutoplay={isAutoplay}
           onClose={() => setIsCinemaStageOpen(false)}
           onPlayPause={handlePlayPause}
           onSeek={handleSeek}
           onPrev={handlePrevTrack}
           onNext={handleNextTrack}
           onToggleLike={handleToggleLike}
+          onToggleAutoplay={() => setIsAutoplay(!isAutoplay)}
           recommendations={tracks.filter((t) => t.youtubeId && t.id !== currentTrack.id)}
           onSelectTrack={handlePlayTrack}
         />
@@ -468,6 +500,7 @@ export default function App() {
           comments={[]}
           isLiked={likedTrackIds.includes(currentTrack.id)}
           onClose={() => setIsExpandedPlayerOpen(false)}
+          onPlayPause={handlePlayPause}
           onToggleLike={handleToggleLike}
           onAddToPlaylist={() => {}}
           onAddComment={() => {}}

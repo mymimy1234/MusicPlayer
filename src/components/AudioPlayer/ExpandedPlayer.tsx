@@ -10,8 +10,11 @@ import {
   Sparkles,
   Youtube,
   ExternalLink,
+  Disc,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Visualizer } from './Visualizer';
+import { DiscPlayer } from './DiscPlayer';
 
 interface ExpandedPlayerProps {
   track: Track;
@@ -20,6 +23,7 @@ interface ExpandedPlayerProps {
   comments: Comment[];
   isLiked: boolean;
   onClose: () => void;
+  onPlayPause?: () => void;
   onToggleLike: (trackId: string) => void;
   onAddToPlaylist: (trackId: string) => void;
   onAddComment: (trackId: string, text: string) => void;
@@ -33,11 +37,13 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
   comments,
   isLiked,
   onClose,
+  onPlayPause,
   onToggleLike,
   onAddToPlaylist,
   onAddComment,
   onSeek,
 }) => {
+  const [artworkMode, setArtworkMode] = useState<'turntable' | 'cover'>('turntable');
   const [visualMode, setVisualMode] = useState<'bars' | 'wave' | 'circle'>('bars');
   const [commentText, setCommentText] = useState('');
   const [activeTab, setActiveTab] = useState<'visual' | 'mv' | 'lyrics' | 'comments'>(
@@ -171,22 +177,59 @@ export const ExpandedPlayer: React.FC<ExpandedPlayerProps> = ({
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 py-8 flex flex-col md:flex-row gap-8 items-stretch pb-28">
         {/* Left Column: Artwork & Track Metadata */}
         <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center">
-          <div className="relative group w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 mb-6">
-            <img
-              src={track.coverUrl}
-              alt={track.title}
-              className={`w-full h-full object-cover transition-transform duration-700 ${
-                isPlaying ? 'scale-105' : 'scale-100'
+          {/* Mode toggle (LP Turntable / Square Cover) */}
+          <div className="flex items-center gap-1 p-1 bg-neutral-900/80 rounded-xl border border-neutral-800 text-xs mb-4 shadow-sm">
+            <button
+              onClick={() => setArtworkMode('turntable')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                artworkMode === 'turntable'
+                  ? 'bg-red-600 text-white shadow-md'
+                  : 'text-neutral-400 hover:text-white'
               }`}
-              referrerPolicy="no-referrer"
-            />
-            {isPlaying && (
-              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs text-indigo-300 border border-indigo-500/30">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>재생 중</span>
-              </div>
-            )}
+            >
+              <Disc className={`w-3.5 h-3.5 ${isPlaying && artworkMode === 'turntable' ? 'animate-spin' : ''}`} />
+              <span>감성 LP 턴테이블</span>
+            </button>
+            <button
+              onClick={() => setArtworkMode('cover')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-medium transition-all ${
+                artworkMode === 'cover'
+                  ? 'bg-neutral-800 text-white shadow-md'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>앨범 커버</span>
+            </button>
           </div>
+
+          {artworkMode === 'turntable' ? (
+            <div className="mb-6 flex items-center justify-center">
+              <DiscPlayer
+                track={track}
+                isPlaying={isPlaying}
+                onTogglePlay={onPlayPause}
+                size={340}
+              />
+            </div>
+          ) : (
+            <div className="relative group w-64 h-64 sm:w-80 sm:h-80 md:w-88 md:h-88 rounded-2xl overflow-hidden shadow-2xl border border-neutral-800 mb-6">
+              <img
+                src={track.coverUrl}
+                alt={track.title}
+                className={`w-full h-full object-cover transition-transform duration-700 ${
+                  isPlaying ? 'scale-105' : 'scale-100'
+                }`}
+                referrerPolicy="no-referrer"
+              />
+              {isPlaying && (
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 text-xs text-indigo-300 border border-indigo-500/30">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>재생 중</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <h2 className="text-2xl sm:text-3xl font-bold text-neutral-100 mb-1 max-w-md">
             {track.title}
