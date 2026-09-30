@@ -13,6 +13,8 @@ import {
   Sun,
   Sparkles,
   SlidersHorizontal,
+  Tv,
+  Disc,
 } from 'lucide-react';
 import { DiscPlayer } from './DiscPlayer';
 
@@ -34,7 +36,7 @@ interface CinemaStageModalProps {
   onSelectTrack: (track: Track) => void;
 }
 
-type StageAmbiance = 'warm_wood' | 'midnight_jazz' | 'deep_amber' | 'nordic_calm' | 'pure_dark';
+type StageAmbiance = 'golden_lounge' | 'aurora_stage' | 'midnight_cyber' | 'nordic_slate' | 'pure_obsidian';
 
 export const CinemaStageModal: React.FC<CinemaStageModalProps> = ({
   track,
@@ -53,9 +55,10 @@ export const CinemaStageModal: React.FC<CinemaStageModalProps> = ({
   recommendations = [],
   onSelectTrack,
 }) => {
-  const [ambiance, setAmbiance] = useState<StageAmbiance>('warm_wood');
+  const [ambiance, setAmbiance] = useState<StageAmbiance>('golden_lounge');
   const [isLightsDimmed, setIsLightsDimmed] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [stageMode, setStageMode] = useState<'video' | 'turntable'>(track.youtubeId ? 'video' : 'turntable');
 
   // Format seconds to mm:ss
   const formatTime = (seconds: number) => {
@@ -72,36 +75,36 @@ export const CinemaStageModal: React.FC<CinemaStageModalProps> = ({
       (idx === track.lyrics.length - 1 || currentTime < track.lyrics[idx + 1].time)
   );
 
-  // Refined, subtle architectural lighting presets
+  // Refined, glamorous architectural lighting presets
   const ambianceThemes = {
-    warm_wood: {
-      name: '내추럴 우드',
-      glow: 'from-amber-950/20 via-orange-950/10 to-transparent',
-      radial: 'radial-gradient(circle at center, rgba(217,119,6,0.08) 0%, rgba(0,0,0,0) 70%)',
+    golden_lounge: {
+      name: '골든 라운지',
+      glow: 'from-amber-950/30 via-yellow-950/20 to-transparent',
+      radial: 'radial-gradient(circle at center, rgba(245,158,11,0.22) 0%, rgba(217,119,6,0.1) 40%, rgba(0,0,0,0) 75%)',
       accentDot: '#f59e0b',
     },
-    midnight_jazz: {
-      name: '미드나잇 벨벳',
-      glow: 'from-rose-950/20 via-neutral-950/10 to-transparent',
-      radial: 'radial-gradient(circle at center, rgba(190,18,60,0.07) 0%, rgba(0,0,0,0) 70%)',
-      accentDot: '#fb7185',
+    aurora_stage: {
+      name: '오로라 앰비언스',
+      glow: 'from-emerald-950/30 via-teal-950/20 to-transparent',
+      radial: 'radial-gradient(circle at center, rgba(16,185,129,0.2) 0%, rgba(99,102,241,0.14) 40%, rgba(0,0,0,0) 75%)',
+      accentDot: '#10b981',
     },
-    deep_amber: {
-      name: '빈티지 앰버',
-      glow: 'from-yellow-950/20 via-amber-950/10 to-transparent',
-      radial: 'radial-gradient(circle at center, rgba(245,158,11,0.08) 0%, rgba(0,0,0,0) 70%)',
-      accentDot: '#fbbf24',
+    midnight_cyber: {
+      name: '미드나잇 사이버',
+      glow: 'from-purple-950/30 via-pink-950/20 to-transparent',
+      radial: 'radial-gradient(circle at center, rgba(139,92,246,0.22) 0%, rgba(244,63,94,0.12) 40%, rgba(0,0,0,0) 75%)',
+      accentDot: '#c084fc',
     },
-    nordic_calm: {
-      name: '노르딕 쿨',
-      glow: 'from-slate-900/30 via-zinc-950/10 to-transparent',
-      radial: 'radial-gradient(circle at center, rgba(148,163,184,0.06) 0%, rgba(0,0,0,0) 70%)',
-      accentDot: '#94a3b8',
+    nordic_slate: {
+      name: '노르딕 스튜디오',
+      glow: 'from-sky-950/30 via-slate-950/20 to-transparent',
+      radial: 'radial-gradient(circle at center, rgba(56,189,248,0.18) 0%, rgba(30,41,59,0.1) 40%, rgba(0,0,0,0) 75%)',
+      accentDot: '#38bdf8',
     },
-    pure_dark: {
-      name: '퓨어 다크',
+    pure_obsidian: {
+      name: '퓨어 옵시디언',
       glow: 'from-transparent to-transparent',
-      radial: 'radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0) 70%)',
+      radial: 'radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 70%)',
       accentDot: '#ffffff',
     },
   };
@@ -200,52 +203,113 @@ export const CinemaStageModal: React.FC<CinemaStageModalProps> = ({
         </div>
       </header>
 
-      {/* Main Center Stage: Elegant Hi-Fi Turntable & Live Lyrics */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-4xl mx-auto w-full">
-        {/* Turntable Platter Stage */}
-        <div className="relative flex flex-col items-center justify-center my-auto">
-          {/* Soft Matte Halo */}
-          <div
-            className={`absolute -inset-10 rounded-full transition-all duration-1000 pointer-events-none ${
-              isPlaying && !isLightsDimmed ? 'opacity-80 scale-100' : 'opacity-20 scale-95'
-            }`}
-            style={{
-              background: `radial-gradient(circle, ${currentTheme.accentDot}18 0%, transparent 70%)`,
-            }}
-          />
+      {/* Main Center Stage: Elegant Hi-Fi Turntable & Live Lyrics or Theater Video */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 max-w-4xl mx-auto w-full my-auto">
+        {/* Mode Switcher (Video Stage / LP Turntable) */}
+        {track.youtubeId && (
+          <div className="flex items-center gap-1 p-0.5 bg-white/[0.04] backdrop-blur-md rounded-full border border-white/[0.06] text-xs mb-6">
+            <button
+              onClick={() => setStageMode('video')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-colors cursor-pointer ${
+                stageMode === 'video'
+                  ? 'bg-white/10 text-white font-medium shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Tv className="w-3.5 h-3.5" />
+              <span>무대 비디오</span>
+            </button>
+            <button
+              onClick={() => setStageMode('turntable')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-colors cursor-pointer ${
+                stageMode === 'turntable'
+                  ? 'bg-white/10 text-white font-medium shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Disc className="w-3.5 h-3.5" />
+              <span>LP 바이닐</span>
+            </button>
+          </div>
+        )}
 
-          <DiscPlayer
-            track={track}
-            isPlaying={isPlaying}
-            onTogglePlay={onPlayPause}
-            size="min(48vh, 380px)"
-            needleDotColor={currentTheme.accentDot}
-            showGlow={false}
-          />
+        {stageMode === 'video' && track.youtubeId ? (
+          <div className="w-full flex flex-col items-center">
+            {/* Cinema Video Frame */}
+            <div className="relative w-full aspect-video max-w-3xl rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_24px_60px_rgba(0,0,0,0.95)] bg-black">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${track.youtubeId}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(
+                  window.location.origin
+                )}`}
+                title={track.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
 
-          {/* Track Metadata & Elegant Synchronized Lyrics */}
-          <div className="mt-8 text-center max-w-lg mx-auto flex flex-col items-center">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
-              {track.title}
-            </h2>
-            <p className="text-sm text-neutral-400 mt-1 font-normal tracking-wide">
-              {track.artist}
-            </p>
+            {/* Track Info & Lyric Line */}
+            <div className="mt-5 text-center max-w-lg mx-auto flex flex-col items-center">
+              <h2 className="text-base sm:text-lg font-semibold text-white tracking-tight truncate max-w-md">
+                {track.title}
+              </h2>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {track.artist}
+              </p>
 
-            {/* Sync Lyric Line */}
-            <div className="mt-4 min-h-[32px] flex items-center justify-center">
-              {activeLyric ? (
-                <p className="text-sm sm:text-base font-medium text-neutral-200 transition-all duration-500 tracking-normal leading-relaxed">
+              {activeLyric && (
+                <div className="mt-2 text-xs sm:text-sm text-neutral-200 transition-all font-medium">
                   {activeLyric.text}
-                </p>
-              ) : (
-                <p className="text-xs text-neutral-600 font-normal">
-                  High Fidelity Audio · 33⅓ RPM
-                </p>
+                </div>
               )}
             </div>
           </div>
-        </div>
+        ) : (
+          /* Turntable Platter Stage */
+          <div className="relative flex flex-col items-center justify-center my-auto">
+            {/* Soft Matte Halo */}
+            <div
+              className={`absolute -inset-10 rounded-full transition-all duration-1000 pointer-events-none ${
+                isPlaying && !isLightsDimmed ? 'opacity-80 scale-100' : 'opacity-20 scale-95'
+              }`}
+              style={{
+                background: `radial-gradient(circle, ${currentTheme.accentDot}18 0%, transparent 70%)`,
+              }}
+            />
+
+            <DiscPlayer
+              track={track}
+              isPlaying={isPlaying}
+              onTogglePlay={onPlayPause}
+              size="min(46vh, 360px)"
+              needleDotColor={currentTheme.accentDot}
+              showGlow={false}
+            />
+
+            {/* Track Metadata & Elegant Synchronized Lyrics */}
+            <div className="mt-6 text-center max-w-lg mx-auto flex flex-col items-center">
+              <h2 className="text-xl sm:text-2xl font-semibold text-white tracking-tight">
+                {track.title}
+              </h2>
+              <p className="text-sm text-neutral-400 mt-1 font-normal tracking-wide">
+                {track.artist}
+              </p>
+
+              {/* Sync Lyric Line */}
+              <div className="mt-3 min-h-[30px] flex items-center justify-center">
+                {activeLyric ? (
+                  <p className="text-sm sm:text-base font-medium text-neutral-200 transition-all duration-500 tracking-normal leading-relaxed">
+                    {activeLyric.text}
+                  </p>
+                ) : (
+                  <p className="text-xs text-neutral-600 font-normal">
+                    High Fidelity Audio · 33⅓ RPM
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Bottom Floating Minimal Control Strip */}
@@ -298,7 +362,7 @@ export const CinemaStageModal: React.FC<CinemaStageModalProps> = ({
 
               <button
                 onClick={onPlayPause}
-                className="w-12 h-12 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 flex items-center justify-center transition-all cursor-pointer shadow-lg active:scale-95"
+                className="w-13 h-13 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 hover:scale-105 text-neutral-950 flex items-center justify-center transition-all cursor-pointer shadow-[0_0_28px_rgba(245,158,11,0.5)] active:scale-95"
                 title={isPlaying ? '일시정지' : '재생'}
               >
                 {isPlaying ? (

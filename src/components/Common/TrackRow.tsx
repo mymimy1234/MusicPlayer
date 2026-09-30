@@ -78,23 +78,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
         {/* Title & Artist */}
         <div className="min-w-0 pr-4">
-          <div className="flex items-center gap-1.5">
-            <h4
-              onClick={() => onClickDetails?.(track)}
-              className={`text-sm font-medium truncate cursor-pointer transition-colors ${
-                isPlayingCurrent
-                  ? 'text-indigo-300 font-semibold'
-                  : 'text-neutral-100 hover:text-indigo-400'
-              }`}
-            >
-              {track.title}
-            </h4>
-            {track.youtubeId && (
-              <span className="text-[9px] font-bold text-red-400 bg-red-950/60 border border-red-800/40 px-1.5 py-0.2 rounded shrink-0">
-                YT MV
-              </span>
-            )}
-          </div>
+          <h4
+            onClick={() => onClickDetails?.(track)}
+            className={`text-sm font-medium truncate cursor-pointer transition-colors ${
+              isPlayingCurrent
+                ? 'text-white font-semibold'
+                : 'text-neutral-200 hover:text-white'
+            }`}
+          >
+            {track.title}
+          </h4>
           <p className="text-xs text-neutral-400 truncate mt-0.5">{track.artist}</p>
         </div>
       </div>

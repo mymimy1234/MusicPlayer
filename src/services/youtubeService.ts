@@ -1,5 +1,6 @@
 // YouTube Service for fetching video metadata, live search, extracting IDs, and managing the YouTube Player API
 import { Track } from '../types/music';
+import { getFullTrackLyrics } from '../utils/lyricsHelper';
 
 declare global {
   interface Window {
@@ -175,11 +176,12 @@ export function convertYouTubeResultToTrack(item: YouTubeSearchResult): Track {
     sourceType: 'youtube',
     youtubeId: item.videoId,
     channelTitle: item.channelTitle,
-    lyrics: [
-      { time: 0, text: `${trackTitle} - ${artistName}`, translation: 'Now playing on ON:SOUND via YouTube HD' },
-      { time: 10, text: '실시간 유튜브 고화질 스트리밍 음원이 재생 중입니다.', translation: 'Streaming in high definition with cinematic backglow' },
-      { time: 25, text: '시네마 무대 모드에서 뮤직비디오 영상을 시청할 수 있습니다.', translation: 'Switch to Cinema Stage mode to experience full visual performance' },
-    ],
+    lyrics: getFullTrackLyrics({
+      title: trackTitle,
+      artist: artistName,
+      duration: durationSecs,
+      lyrics: [],
+    } as any),
   };
 }
 

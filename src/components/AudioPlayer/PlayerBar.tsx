@@ -45,6 +45,7 @@ interface PlayerBarProps {
   onOpenQueue: () => void;
   onOpenExpanded: () => void;
   onOpenCinemaStage?: () => void;
+  onOpenDiscPlayer?: () => void;
 }
 
 export const PlayerBar: React.FC<PlayerBarProps> = ({
@@ -72,6 +73,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
   onOpenQueue,
   onOpenExpanded,
   onOpenCinemaStage,
+  onOpenDiscPlayer,
 }) => {
   const [showVisualizerMini, setShowVisualizerMini] = useState(true);
 
@@ -99,11 +101,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
         }}
       >
         <div
-          className={`h-full relative transition-all group-hover:h-1 ${
-            currentTrack.youtubeId
-              ? 'bg-gradient-to-r from-red-600 via-rose-500 to-cyan-400'
-              : 'bg-indigo-500'
-          }`}
+          className="h-full relative transition-all group-hover:h-1 bg-gradient-to-r from-amber-500 via-yellow-300 to-rose-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -112,7 +110,11 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
         {/* Left: Track Info & Artwork */}
         <div className="flex items-center gap-3 w-1/4 min-w-[200px]">
           <div
-            className="relative group w-12 h-12 rounded-xl overflow-hidden shrink-0 cursor-pointer border border-neutral-800 shadow"
+            className={`relative group w-12 h-12 rounded-xl overflow-hidden shrink-0 cursor-pointer border transition-all ${
+              isPlaying
+                ? 'border-amber-400/50 shadow-[0_0_16px_rgba(245,158,11,0.3)]'
+                : 'border-white/10 shadow'
+            }`}
             onClick={currentTrack.youtubeId && onOpenCinemaStage ? onOpenCinemaStage : onOpenExpanded}
           >
             <img
@@ -131,19 +133,12 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
           </div>
 
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h4
-                onClick={currentTrack.youtubeId && onOpenCinemaStage ? onOpenCinemaStage : onOpenExpanded}
-                className="text-sm font-semibold text-neutral-100 truncate hover:text-red-400 cursor-pointer transition-colors"
-              >
-                {currentTrack.title}
-              </h4>
-              {currentTrack.youtubeId && (
-                <span className="shrink-0 bg-red-600 text-white text-[9px] px-1 py-0.2 rounded font-extrabold tracking-wider">
-                  HD
-                </span>
-              )}
-            </div>
+            <h4
+              onClick={currentTrack.youtubeId && onOpenCinemaStage ? onOpenCinemaStage : onOpenExpanded}
+              className="text-xs sm:text-sm font-medium text-neutral-100 truncate hover:text-white cursor-pointer transition-colors"
+            >
+              {currentTrack.title}
+            </h4>
             <p className="text-xs text-neutral-400 truncate mt-0.5">
               {currentTrack.artist}
             </p>
@@ -151,7 +146,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
 
           <button
             onClick={() => onToggleLike(currentTrack.id)}
-            className="p-1.5 text-neutral-400 hover:text-rose-500 transition-colors ml-1 shrink-0 cursor-pointer"
+            className="p-1.5 text-neutral-500 hover:text-rose-400 transition-colors ml-1 shrink-0 cursor-pointer"
             title={isLiked ? '좋아요 취소' : '좋아요'}
           >
             <Heart
@@ -160,18 +155,6 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
               }`}
             />
           </button>
-
-          {/* Quick Cinema Stage button on the bar */}
-          {currentTrack.youtubeId && onOpenCinemaStage && (
-            <button
-              onClick={onOpenCinemaStage}
-              className="hidden xl:flex items-center gap-1 px-2.5 py-1 bg-red-600/20 hover:bg-red-600/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-[11px] font-bold transition-all shadow-sm cursor-pointer whitespace-nowrap"
-              title="시네마 무대 모드로 열기"
-            >
-              <Tv className="w-3.5 h-3.5 text-red-500" />
-              <span>시네마 무대</span>
-            </button>
-          )}
         </div>
 
         {/* Center: Controls & Seek Bar */}
@@ -180,7 +163,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             <button
               onClick={onToggleShuffle}
               className={`p-1.5 transition-colors cursor-pointer ${
-                isShuffle ? 'text-indigo-400' : 'text-neutral-500 hover:text-neutral-300'
+                isShuffle ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
               }`}
               title="셔플 재생"
             >
@@ -189,7 +172,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
 
             <button
               onClick={onPrev}
-              className="p-1.5 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
               title="이전 곡"
             >
               <SkipBack className="w-4 h-4" />
@@ -197,23 +180,19 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
 
             <button
               onClick={onPlayPause}
-              className={`w-10 h-10 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-md cursor-pointer ${
-                currentTrack.youtubeId
-                  ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/30'
-                  : 'bg-white text-neutral-950'
-              }`}
+              className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 hover:scale-105 text-neutral-950 flex items-center justify-center transition-all shadow-[0_0_20px_rgba(245,158,11,0.5)] cursor-pointer active:scale-95"
               title={isPlaying ? '일시정지' : '재생'}
             >
               {isPlaying ? (
-                <Pause className={`w-5 h-5 ${currentTrack.youtubeId ? 'fill-white' : 'fill-neutral-950'}`} />
+                <Pause className="w-4 h-4 fill-neutral-950" />
               ) : (
-                <Play className={`w-5 h-5 ml-0.5 ${currentTrack.youtubeId ? 'fill-white' : 'fill-neutral-950'}`} />
+                <Play className="w-4 h-4 ml-0.5 fill-neutral-950" />
               )}
             </button>
 
             <button
               onClick={onNext}
-              className="p-1.5 text-neutral-300 hover:text-white transition-colors cursor-pointer"
+              className="p-1.5 text-neutral-400 hover:text-white transition-colors cursor-pointer"
               title="다음 곡"
             >
               <SkipForward className="w-4 h-4" />
@@ -222,7 +201,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             <button
               onClick={onToggleLoop}
               className={`p-1.5 transition-colors cursor-pointer ${
-                isLoop ? 'text-indigo-400' : 'text-neutral-500 hover:text-neutral-300'
+                isLoop ? 'text-amber-400' : 'text-neutral-500 hover:text-neutral-300'
               }`}
               title="한 곡 반복"
             >
@@ -232,12 +211,12 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
             {onToggleAutoplay && (
               <button
                 onClick={onToggleAutoplay}
-                className={`p-1.5 transition-all cursor-pointer rounded-md ${
+                className={`p-1.5 transition-colors cursor-pointer ${
                   isAutoplay
-                    ? 'text-cyan-400 bg-cyan-500/10 shadow-[0_0_10px_rgba(6,182,212,0.3)]'
-                    : 'text-neutral-500 hover:text-neutral-300'
+                    ? 'text-amber-400'
+                    : 'text-neutral-600 hover:text-neutral-400'
                 }`}
-                title={isAutoplay ? '자동 연속 재생 켜짐 (무한 스트리밍)' : '자동 연속 재생 꺼짐'}
+                title={isAutoplay ? '자동 연속 재생 켜짐' : '자동 연속 재생 꺼짐'}
               >
                 <Infinity className="w-4 h-4" />
               </button>
@@ -246,7 +225,7 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
 
           {/* Seek Bar with Time labels */}
           <div className="w-full flex items-center gap-3">
-            <span className="text-[11px] font-mono tabular-nums text-neutral-400 w-8 text-right">
+            <span className="text-[11px] font-mono tabular-nums text-neutral-500 w-8 text-right">
               {formatTime(currentTime)}
             </span>
             <div className="relative flex-1 group py-2 cursor-pointer">
@@ -257,35 +236,35 @@ export const PlayerBar: React.FC<PlayerBarProps> = ({
                 step={0.5}
                 value={currentTime}
                 onChange={(e) => onSeek(parseFloat(e.target.value))}
-                className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-red-500 focus:outline-none"
+                className="w-full h-1 bg-white/[0.12] hover:bg-white/[0.2] rounded-full appearance-none cursor-pointer accent-amber-400 focus:outline-none transition-colors"
               />
             </div>
-            <span className="text-[11px] font-mono tabular-nums text-neutral-400 w-8">
+            <span className="text-[11px] font-mono tabular-nums text-neutral-500 w-8">
               {formatTime(duration)}
             </span>
           </div>
         </div>
 
         {/* Right: Audio Features (Visualizer, Cinema Stage, LP Mode, Lyrics, Queue, Volume) */}
-        <div className="flex items-center justify-end gap-2.5 w-1/4 min-w-[220px]">
+        <div className="flex items-center justify-end gap-2 w-1/4 min-w-[220px]">
           {/* Quick LP Turntable Mode Button */}
           <button
-            onClick={onOpenExpanded}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/40 rounded-lg transition-all cursor-pointer shadow-sm active:scale-95"
-            title="감성 LP 턴테이블 모드로 열기"
+            onClick={onOpenDiscPlayer || onOpenExpanded}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-amber-300 hover:text-white bg-amber-950/40 hover:bg-amber-900/60 border border-amber-500/30 rounded-lg transition-all cursor-pointer shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+            title="턴테이블 모드"
           >
-            <Disc className={`w-3.5 h-3.5 text-rose-400 ${isPlaying ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">감성 LP</span>
+            <Disc className={`w-3.5 h-3.5 text-amber-400 ${isPlaying ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">LP</span>
           </button>
 
           {/* Cinema Stage Shortcut */}
           {currentTrack.youtubeId && onOpenCinemaStage && (
             <button
               onClick={onOpenCinemaStage}
-              className="p-2 text-cyan-300 hover:text-cyan-200 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/40 rounded-lg transition-colors cursor-pointer"
-              title="시네마 무대 모드"
+              className="p-1.5 text-red-300 hover:text-white bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 rounded-lg transition-all cursor-pointer shadow-[0_0_12px_rgba(239,68,68,0.2)]"
+              title="시네마 무대"
             >
-              <Tv className="w-4 h-4 text-red-500" />
+              <Tv className="w-3.5 h-3.5 text-red-400" />
             </button>
           )}
 

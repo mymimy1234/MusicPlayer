@@ -17,6 +17,7 @@ import {
   Plus,
   Sparkles,
   ChevronDown,
+  Disc,
 } from 'lucide-react';
 import { UserProfile, UserCategory } from '../../types/auth';
 
@@ -30,6 +31,7 @@ interface NavbarProps {
   hasActiveTrack: boolean;
   isPlaying: boolean;
   onOpenCinemaStage: () => void;
+  onOpenDiscPlayer?: () => void;
   currentUser: UserProfile | null;
   onOpenAuth: (mode?: 'login' | 'signup') => void;
   onLogout: () => void;
@@ -47,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   hasActiveTrack,
   isPlaying,
   onOpenCinemaStage,
+  onOpenDiscPlayer,
   currentUser,
   onOpenAuth,
   onLogout,
@@ -101,81 +104,134 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-3 sm:px-6 py-2.5 bg-neutral-950/90 backdrop-blur-xl border-b border-neutral-800/80 select-none">
-      {/* Zone 1: Brand title & YouTube Engine Badge */}
+    <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-8 py-3 bg-[#0a0a0c]/90 backdrop-blur-xl border-b border-white/[0.06] select-none">
+      {/* Zone 1: Brand Wordmark & Architectural Hi-Fi Emblem */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => onCategoryChange('explore')}
-          className="flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0 text-left cursor-pointer"
+          className="group flex items-center gap-3 hover:opacity-95 transition-all shrink-0 text-left cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 via-rose-600 to-red-500 flex items-center justify-center shadow-lg shadow-red-600/30">
-            <Youtube className="w-4 h-4 text-white fill-white" />
+          {/* Architectural Hi-Fi Vinyl & Sound Wave Emblem */}
+          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e1e28] via-[#121217] to-[#09090c] p-[1.5px] shadow-[0_4px_20px_rgba(0,0,0,0.8),0_0_15px_rgba(245,158,11,0.18)] group-hover:shadow-[0_4px_25px_rgba(245,158,11,0.4)] transition-all">
+            <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#181820] to-[#0b0b0e] border border-amber-400/30 group-hover:border-amber-400/60 transition-colors flex items-center justify-center overflow-hidden relative">
+              {/* Subtle radial glow inside badge */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_35%,rgba(245,158,11,0.25)_0%,transparent_75%)] pointer-events-none" />
+
+              {/* Vector Vinyl & Waveform Art */}
+              <svg
+                viewBox="0 0 32 32"
+                className={`w-5 h-5 transition-transform duration-700 ease-out ${
+                  isPlaying ? 'animate-[spin_6s_linear_infinite]' : 'group-hover:rotate-45'
+                }`}
+                fill="none"
+              >
+                {/* Concentric Vinyl Grooves */}
+                <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="0.8" className="text-white/10" />
+                <circle cx="16" cy="16" r="11" stroke="currentColor" strokeWidth="0.8" className="text-white/15" />
+                <circle cx="16" cy="16" r="8" stroke="currentColor" strokeWidth="0.8" className="text-white/20" />
+
+                {/* Stylized Golden Sound Arc Wave */}
+                <path
+                  d="M16 4 A12 12 0 0 1 28 16"
+                  stroke="url(#navbar-logo-gold)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M16 28 A12 12 0 0 1 4 16"
+                  stroke="url(#navbar-logo-gold)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeDasharray="2 3"
+                />
+
+                {/* Center Brass Spindle & Core */}
+                <circle cx="16" cy="16" r="3.5" fill="#f59e0b" />
+                <circle cx="16" cy="16" r="1.5" fill="#09090b" />
+
+                <defs>
+                  <linearGradient id="navbar-logo-gold" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#fde047" />
+                    <stop offset="0.5" stopColor="#f59e0b" />
+                    <stop offset="1" stopColor="#d97706" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* Live Audio indicator dot */}
+              {isPlaying && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b] animate-ping" />
+              )}
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base sm:text-lg font-black tracking-tight text-white font-display">
-                ON:SOUND
+
+          {/* Sophisticated Wordmark & Hierarchy */}
+          <div className="flex flex-col">
+            <div className="flex items-center tracking-tight leading-none">
+              <span className="font-extrabold text-[17px] text-white tracking-wider font-display">
+                ON
               </span>
-              <span className="bg-red-600/20 text-red-400 border border-red-500/30 text-[9px] font-black px-1.5 py-0.2 rounded-md uppercase tracking-wider">
-                TUBE
+              <span className="mx-[2px] flex flex-col gap-[3px] items-center justify-center px-0.5">
+                <span className="w-[3px] h-[3px] rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
+                <span className="w-[3px] h-[3px] rounded-full bg-amber-500 shadow-[0_0_6px_#f59e0b]" />
+              </span>
+              <span className="font-extrabold text-[17px] bg-gradient-to-r from-white via-neutral-100 to-amber-200 bg-clip-text text-transparent tracking-widest font-display">
+                SOUND
               </span>
             </div>
-            <p className="text-[10px] text-neutral-400 font-mono hidden sm:block">
-              YouTube Music Explorer
-            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[8px] font-mono tracking-[0.25em] text-neutral-400 uppercase font-medium">
+                STUDIO HI-FI
+              </span>
+              <span className="w-1 h-1 rounded-full bg-amber-400/60" />
+              <span className="text-[8px] font-mono tracking-widest text-amber-400/90 font-semibold">
+                33⅓ RPM
+              </span>
+            </div>
           </div>
         </button>
       </div>
 
-      {/* Zone 2: Navigation Links for YouTube Exploration */}
-      <nav className="hidden xl:flex items-center gap-1 text-xs font-semibold text-neutral-400">
+      {/* Zone 2: Clean Typography Navigation Links */}
+      <nav className="hidden xl:flex items-center gap-6 text-xs font-medium">
         {navItems.map((item) => {
-          const Icon = item.icon;
           const isActive = currentCategory === item.id;
           return (
             <button
               key={item.id}
               onClick={() => onCategoryChange(item.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer whitespace-nowrap ${
+              className={`transition-colors cursor-pointer whitespace-nowrap py-1 relative ${
                 isActive
-                  ? 'bg-neutral-800 text-white font-bold shadow-sm border border-neutral-700/60'
-                  : 'hover:text-neutral-200 hover:bg-neutral-900/60'
+                  ? 'text-white font-semibold'
+                  : 'text-neutral-400 hover:text-neutral-200'
               }`}
             >
-              <Icon
-                className={`w-3.5 h-3.5 ${
-                  isActive
-                    ? 'text-red-500'
-                    : item.id === 'trending'
-                    ? 'text-amber-500'
-                    : item.id === 'favorites'
-                    ? 'text-rose-500'
-                    : 'text-neutral-400'
-                }`}
-              />
               <span>{item.label}</span>
               {typeof item.badge === 'number' && item.badge > 0 && (
-                <span className="ml-0.5 bg-red-600/30 text-red-300 text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold">
+                <span className="ml-1 text-[11px] font-mono text-neutral-500 tabular-nums">
                   {item.badge}
                 </span>
+              )}
+              {isActive && (
+                <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-white rounded-full" />
               )}
             </button>
           );
         })}
       </nav>
 
-      {/* Zone 3: Search input, Cinema Stage Button & User Auth */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Instant Search Bar */}
+      {/* Zone 3: Search & Actions */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Search Bar */}
         <form onSubmit={handleSearchSubmit} className="relative">
-          <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="유튜브 음악, 직캠 검색..."
+            placeholder="음악, 아티스트, 직캠 검색..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-36 sm:w-52 md:w-60 lg:w-64 bg-neutral-900/90 border border-neutral-800 rounded-xl pl-8 pr-7 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-red-500/80 transition-all font-sans"
+            className="w-36 sm:w-52 md:w-60 lg:w-64 bg-white/[0.04] border border-white/[0.08] focus:border-white/25 rounded-lg pl-8 pr-7 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none transition-all font-sans"
           />
           {searchQuery ? (
             <button
@@ -184,36 +240,46 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onSearchChange('');
                 onCategoryChange('explore');
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white p-0.5"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white p-0.5 cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
           ) : (
-            <span className="hidden md:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-500 border border-neutral-800 rounded px-1 font-mono pointer-events-none">
+            <span className="hidden md:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-neutral-500 border border-white/[0.06] rounded px-1 font-mono pointer-events-none">
               /
             </span>
           )}
         </form>
 
+        {/* DiscPlayer Launcher */}
+        {onOpenDiscPlayer && (
+          <button
+            onClick={onOpenDiscPlayer}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+              isPlaying
+                ? 'bg-white/10 text-white border-white/20'
+                : 'bg-white/[0.03] text-neutral-400 border-white/[0.06] hover:text-neutral-200 hover:bg-white/[0.06]'
+            }`}
+            title="바이닐 턴테이블 모드"
+          >
+            <Disc className={`w-3.5 h-3.5 ${isPlaying ? 'text-rose-400 animate-spin' : 'text-neutral-400'}`} />
+            <span className="hidden sm:inline">LP 모드</span>
+          </button>
+        )}
+
         {/* Cinema Stage Launcher */}
         <button
           onClick={onOpenCinemaStage}
           disabled={!hasActiveTrack}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-md whitespace-nowrap cursor-pointer ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
             hasActiveTrack
-              ? 'bg-gradient-to-r from-red-600 via-rose-600 to-red-500 text-white shadow-red-600/30 hover:scale-105 active:scale-95'
-              : 'bg-neutral-900 text-neutral-500 cursor-not-allowed border border-neutral-800'
+              ? 'bg-white/[0.03] text-neutral-300 border-white/[0.06] hover:text-white hover:bg-white/[0.06]'
+              : 'bg-white/[0.01] text-neutral-600 border-white/[0.04] cursor-not-allowed'
           }`}
           title={hasActiveTrack ? '시네마 무대 모드로 전환' : '재생 중인 곡이 없습니다'}
         >
-          <Tv className="w-3.5 h-3.5 text-cyan-300" />
+          <Tv className="w-3.5 h-3.5 text-neutral-400" />
           <span className="hidden sm:inline">시네마</span>
-          {isPlaying && (
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400" />
-            </span>
-          )}
         </button>
 
         {/* User Auth: Login / Profile Menu */}

@@ -39,21 +39,14 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             isPlayingCurrent ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}
         >
-          <div className="w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg transition-transform transform active:scale-95">
+          <div className="w-10 h-10 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 flex items-center justify-center shadow-lg transition-transform active:scale-95">
             {isPlayingCurrent ? (
-              <Pause className="w-5 h-5 fill-white" />
+              <Pause className="w-4 h-4 fill-neutral-950" />
             ) : (
-              <Play className="w-5 h-5 fill-white ml-0.5" />
+              <Play className="w-4 h-4 fill-neutral-950 ml-0.5" />
             )}
           </div>
         </div>
-
-        {/* YouTube tag */}
-        {track.youtubeId && (
-          <div className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">
-            YouTube MV
-          </div>
-        )}
 
         {/* Action icon in corner */}
         <button
@@ -61,7 +54,7 @@ export const TrackCard: React.FC<TrackCardProps> = ({
             e.stopPropagation();
             onToggleLike(track.id);
           }}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-neutral-950/60 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-400"
+          className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-neutral-950/60 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:text-rose-400 cursor-pointer"
           title="좋아요"
         >
           <Heart className={`w-3.5 h-3.5 ${isLiked ? 'text-rose-500 fill-rose-500' : ''}`} />

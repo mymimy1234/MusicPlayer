@@ -13,6 +13,7 @@ import {
   Search,
   Youtube,
   Play,
+  Pause,
   ListPlus,
   Tv,
   Check,
@@ -44,6 +45,7 @@ import {
   Car,
   Laptop,
 } from 'lucide-react';
+import { DiscPlayer } from '../AudioPlayer/DiscPlayer';
 
 interface YouTubeExploreViewProps {
   allTracks?: Track[];
@@ -60,6 +62,7 @@ interface YouTubeExploreViewProps {
   onPlayAll: (tracks: Track[]) => void;
   onAddToQueue: (track: Track) => void;
   onOpenCinemaStage: (track: Track) => void;
+  onOpenDiscPlayer?: (track: Track) => void;
   onToggleLike: (trackId: string) => void;
   onClearHistory?: () => void;
   currentUser: UserProfile | null;
@@ -73,20 +76,20 @@ interface YouTubeExploreViewProps {
 
 // Built-in Exploration Categories with pre-configured search queries and iconography
 const SYSTEM_CATEGORIES = [
-  { id: 'explore', label: '전체 탐색', icon: Compass, query: 'K-POP 인기곡' },
-  { id: 'night', label: '🌙 새벽 감성 힐링', icon: Moon, query: '새벽 감성 힐링 노래 모음' },
-  { id: 'drive', label: '🚗 신나는 드라이브', icon: Car, query: '신나는 드라이브 믹스 K-POP' },
-  { id: 'coding', label: '💻 집중 코딩 노동요', icon: Laptop, query: '집중 코딩 노동요 로파이' },
-  { id: 'trending', label: '인기 MV', icon: Flame, query: 'K-POP 인기 뮤직비디오' },
-  { id: 'kpop', label: '아이돌 & K-POP', icon: Sparkles, query: 'K-POP 최신 아이돌 인기곡' },
+  { id: 'explore', label: '전체', icon: Compass, query: 'K-POP 인기곡' },
+  { id: 'night', label: '새벽 감성', icon: Moon, query: '새벽 감성 힐링 노래 모음' },
+  { id: 'drive', label: '드라이브', icon: Car, query: '신나는 드라이브 믹스 K-POP' },
+  { id: 'coding', label: '집중 & 코딩', icon: Laptop, query: '집중 코딩 노동요 로파이' },
+  { id: 'trending', label: '인기 차트', icon: Flame, query: 'K-POP 인기 뮤직비디오' },
+  { id: 'kpop', label: 'K-Pop', icon: Sparkles, query: 'K-POP 최신 아이돌 인기곡' },
   { id: 'hiphop', label: '힙합 & R&B', icon: Disc, query: '한국 힙합 알앤비 플레이리스트' },
   { id: 'indie', label: '밴드 & 인디', icon: Music2, query: '한국 인디 밴드 라이브 명곡' },
   { id: 'ballad', label: '감성 발라드', icon: Heart, query: '애절한 감성 발라드 명곡' },
-  { id: 'lofi', label: '로파이 & 칠', icon: Coffee, query: '카페 감성 로파이 음악 플레이리스트' },
-  { id: 'citypop', label: '시티팝 드라이브', icon: Disc, query: '한국 시티팝 명곡 모음 드라이브' },
+  { id: 'lofi', label: '로파이', icon: Coffee, query: '카페 감성 로파이 음악 플레이리스트' },
+  { id: 'citypop', label: '시티팝', icon: Disc, query: '한국 시티팝 명곡 모음 드라이브' },
   { id: 'ost', label: '드라마 OST', icon: Tv, query: '레전드 명작 드라마 OST 모음' },
-  { id: 'live', label: '4K 직캠 & 무대', icon: Radio, query: 'K-POP 레전드 라이브 무대 4K' },
-  { id: 'mixes', label: '모음 플레이리스트', icon: ListMusic, query: '노래 모음 연속 재생 플레이리스트' },
+  { id: 'live', label: '라이브 & 직캠', icon: Radio, query: 'K-POP 레전드 라이브 무대 4K' },
+  { id: 'mixes', label: '플레이리스트', icon: ListMusic, query: '노래 모음 연속 재생 플레이리스트' },
 ];
 
 export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
@@ -104,6 +107,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
   onPlayAll,
   onAddToQueue,
   onOpenCinemaStage,
+  onOpenDiscPlayer,
   onToggleLike,
   onClearHistory,
   currentUser,
@@ -126,6 +130,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
   const [filterMode, setFilterMode] = useState<'all' | 'mv' | 'live' | 'playlist'>('all');
   const [sortBy, setSortBy] = useState<'curated' | 'views' | 'title'>('curated');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [soundDspMode, setSoundDspMode] = useState<'tube' | 'concert' | 'master'>('tube');
 
   // Inline Category Creator
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -394,6 +399,10 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
     return list;
   }, [searchResults, sortBy]);
 
+  // Featured track for the signature Hi-Fi deck
+  const featuredTrack = currentTrack || (allTracks && allTracks.length > 0 ? allTracks[0] : null);
+  const isCurrentPlaying = !!(currentTrack && featuredTrack && currentTrack.id === featuredTrack.id && isPlaying);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-24">
       {/* Toast alert popup */}
@@ -404,29 +413,18 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
         </div>
       )}
 
-      {/* Hero Header with Sleek Clean Red-Gradient Banner */}
-      <div className="relative rounded-3xl overflow-hidden border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-neutral-950 p-6 sm:p-8 shadow-xl">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-red-600/10 filter blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-60 h-60 rounded-full bg-indigo-600/10 filter blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-3xl">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[11px] font-extrabold text-red-400 tracking-wider font-mono uppercase">
-              YOUTUBE EXPLORER & CATEGORY HUB
-            </span>
-          </div>
-
-          <h1 className="text-xl sm:text-3xl font-black text-white font-display mb-2 tracking-tight">
-            유튜브 음악을 탐색하고 카테고리별로 자유롭게 분류하세요
+      {/* Quiet, Clean Editorial Header & Search */}
+      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 sm:p-8">
+        <div className="max-w-2xl">
+          <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+            음악 라이브러리
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-300 mb-5 leading-relaxed">
-            원하는 가수, 최신 발매곡, 라이브 직캠을 탐색하고 나만의 맞춤 카테고리에 분류하여 정리하세요.
-            고화질 시네마 무대와 앰비언트 비주얼라이저로 감상할 수 있습니다.
+          <p className="text-xs sm:text-sm text-neutral-400 mt-1 mb-5">
+            아티스트, 최신 발매곡, 라이브 무대를 검색하고 나만의 카테고리로 정리해보세요.
           </p>
 
           {/* Search Bar with Autocomplete Dropdown */}
-          <div ref={searchBoxRef} className="relative mb-3">
+          <div ref={searchBoxRef} className="relative">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -435,34 +433,33 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
               className="flex items-center gap-2"
             >
               <div className="relative flex-1">
-                <Search className="w-4 h-4 text-neutral-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Search className="w-4 h-4 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => onSearchQueryChange(e.target.value)}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder="가수, 곡명, 드라마 OST, 4K 직캠, 플레이리스트 검색..."
-                  className="w-full bg-neutral-900/90 border border-neutral-700/80 focus:border-red-500 rounded-2xl pl-11 pr-4 py-3 text-xs sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none shadow-xl transition-all"
+                  placeholder="곡명, 아티스트, 직캠, 플레이리스트 검색..."
+                  className="w-full bg-[#121216] border border-white/[0.08] focus:border-white/30 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
-                className="flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-2xl shadow-lg shadow-red-600/30 transition-all active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-white text-neutral-950 hover:bg-neutral-200 font-medium text-xs rounded-xl transition-all cursor-pointer shrink-0"
               >
-                <Youtube className="w-4 h-4" />
                 <span>검색</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowUrlImport(!showUrlImport)}
-                className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
                   showUrlImport
-                    ? 'bg-neutral-800 border-red-500 text-red-400'
-                    : 'bg-neutral-900 border-neutral-700 text-neutral-300 hover:text-white'
+                    ? 'bg-white/10 border-white/20 text-white'
+                    : 'bg-[#121216] border-white/[0.08] text-neutral-400 hover:text-white'
                 }`}
-                title="YouTube URL 직접 붙여넣기"
+                title="YouTube URL 직접 입력"
               >
                 <LinkIcon className="w-4 h-4" />
               </button>
@@ -470,7 +467,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
 
             {/* Suggestions Dropdown */}
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden z-40 max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-[#141418] border border-white/[0.08] rounded-xl shadow-2xl overflow-hidden z-40 max-h-60 overflow-y-auto">
                 {suggestions.map((s, idx) => (
                   <div
                     key={idx}
@@ -479,7 +476,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                       executeSearch(s);
                       setShowSuggestions(false);
                     }}
-                    className="flex items-center gap-3 px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-neutral-800/80 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 px-4 py-2 text-xs text-neutral-300 hover:text-white hover:bg-white/[0.04] cursor-pointer transition-colors"
                   >
                     <Search className="w-3.5 h-3.5 text-neutral-500" />
                     <span>{s}</span>
@@ -493,7 +490,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
           {showUrlImport && (
             <form
               onSubmit={handleUrlSubmit}
-              className="mt-3 p-3 bg-neutral-950/90 border border-neutral-800 rounded-2xl flex items-center gap-2 animate-fadeIn"
+              className="mt-3 p-3 bg-[#121216] border border-white/[0.08] rounded-xl flex items-center gap-2"
             >
               <div className="relative flex-1">
                 <LinkIcon className="w-3.5 h-3.5 text-neutral-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -501,99 +498,357 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                   type="text"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=... 링크 또는 영상 ID 직접 붙여넣기"
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9 pr-3 py-2 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-red-500"
+                  placeholder="https://www.youtube.com/watch?v=... 영상 링크 붙여넣기"
+                  className="w-full bg-transparent border-0 pl-9 pr-3 py-1.5 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={!urlInput.trim() || urlLoading}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 bg-white text-neutral-950 hover:bg-neutral-200 disabled:opacity-40 text-xs font-medium rounded-lg transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
               >
-                <Play className="w-3 h-3 fill-white" />
-                <span>{urlLoading ? '로딩 중...' : '시네마로 즉시 재생'}</span>
+                <Play className="w-3 h-3 fill-neutral-950" />
+                <span>{urlLoading ? '확인 중...' : '재생'}</span>
               </button>
             </form>
           )}
         </div>
       </div>
 
+      {/* Signature Hi-Fi Vinyl Console Deck with Glamorous Audio Aura */}
+      {!activeCustomCategory && (activeCategory === 'explore' || activeCategory === 'trending') && featuredTrack && (
+        <section
+          className={`relative overflow-hidden rounded-2xl border transition-all duration-700 p-6 sm:p-8 shadow-2xl ${
+            soundDspMode === 'tube'
+              ? 'border-amber-500/30 bg-[#0e0d12] shadow-[0_20px_80px_-15px_rgba(245,158,11,0.2)]'
+              : soundDspMode === 'concert'
+              ? 'border-indigo-500/30 bg-[#0c0d16] shadow-[0_20px_80px_-15px_rgba(99,102,241,0.2)]'
+              : 'border-emerald-500/30 bg-[#0a1011] shadow-[0_20px_80px_-15px_rgba(16,185,129,0.2)]'
+          }`}
+        >
+          {/* Luminous dynamic ambient studio aura */}
+          <div
+            className="absolute top-0 right-1/4 w-[500px] h-[350px] pointer-events-none transition-all duration-1000"
+            style={{
+              background:
+                soundDspMode === 'tube'
+                  ? 'radial-gradient(circle, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.08) 45%, transparent 75%)'
+                  : soundDspMode === 'concert'
+                  ? 'radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(168,85,247,0.1) 45%, transparent 75%)'
+                  : 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(6,182,212,0.08) 45%, transparent 75%)',
+            }}
+          />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 lg:gap-12">
+            {/* Left: Authentic Precision Platter Vinyl (DiscPlayer) */}
+            <div className="shrink-0 flex items-center justify-center">
+              <div className="relative p-2 rounded-full">
+                <DiscPlayer
+                  track={featuredTrack}
+                  isPlaying={isCurrentPlaying}
+                  onTogglePlay={() => onPlayTrack(featuredTrack)}
+                  size={240}
+                  needleDotColor={
+                    soundDspMode === 'tube'
+                      ? '#f59e0b'
+                      : soundDspMode === 'concert'
+                      ? '#818cf8'
+                      : '#10b981'
+                  }
+                  showGlow={false}
+                />
+              </div>
+            </div>
+
+            {/* Right: Technical Editorial Console Information */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center text-center md:text-left">
+              {/* Header Telemetry & Sound DSP Switcher */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 text-[11px] font-mono tracking-wider mb-3">
+                <span className="flex items-center gap-1.5 font-bold px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isCurrentPlaying
+                        ? soundDspMode === 'tube'
+                          ? 'bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]'
+                          : soundDspMode === 'concert'
+                          ? 'bg-indigo-400 animate-pulse shadow-[0_0_8px_#818cf8]'
+                          : 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#10b981]'
+                        : 'bg-neutral-600'
+                    }`}
+                  />
+                  {isCurrentPlaying ? 'NOW SPINNING' : 'FEATURED DECK'}
+                </span>
+
+                <span className="text-neutral-500">/</span>
+                <span className="text-neutral-300 font-medium">33⅓ RPM STEREO</span>
+                <span className="text-neutral-500">/</span>
+                <span className="text-amber-400/90 font-semibold">24-BIT MASTER</span>
+
+                {/* Sound DSP Presets Toggle */}
+                <div className="hidden sm:flex items-center gap-1 ml-auto p-0.5 bg-black/40 rounded-lg border border-white/10 text-[10px]">
+                  <button
+                    onClick={() => {
+                      setSoundDspMode('tube');
+                      showToast('진공관 아날로그 온기 모드 활성화');
+                    }}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      soundDspMode === 'tube'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    아날로그 진공관
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSoundDspMode('concert');
+                      showToast('3D 공간 입체 콘서트 모드 활성화');
+                    }}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      soundDspMode === 'concert'
+                        ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    3D 콘서트
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSoundDspMode('master');
+                      showToast('스튜디오 마스터링 고해상도 모드 활성화');
+                    }}
+                    className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
+                      soundDspMode === 'master'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    스튜디오 마스터
+                  </button>
+                </div>
+              </div>
+
+              {/* Title & Artist */}
+              <h2
+                onClick={() => onPlayTrack(featuredTrack)}
+                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight truncate hover:text-amber-200 cursor-pointer transition-colors"
+                title={featuredTrack.title}
+              >
+                {featuredTrack.title}
+              </h2>
+
+              <p className="text-sm sm:text-base text-neutral-300 mt-1.5 font-medium tracking-wide">
+                {featuredTrack.artist}
+                {featuredTrack.album && (
+                  <span className="text-neutral-500 ml-2">· {featuredTrack.album}</span>
+                )}
+              </p>
+
+              {/* Graphic LED Equalizer Spectrum with Peak Markers & dB Scale */}
+              <div className="mt-4 pt-2 border-t border-white/[0.08]">
+                <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mb-1 px-0.5">
+                  <span>-36dB</span>
+                  <span>-18dB</span>
+                  <span>-6dB</span>
+                  <span className="text-amber-400/80">0dB</span>
+                  <span className="text-rose-400 font-bold">PEAK +3dB</span>
+                </div>
+
+                <div className="flex items-end justify-center md:justify-start gap-1 h-7 py-0.5">
+                  {[35, 50, 65, 80, 95, 75, 60, 85, 100, 90, 70, 55, 80, 92, 68, 85, 95, 78, 62, 48, 70, 88, 55, 40].map(
+                    (h, idx) => {
+                      const dynamicHeight = isCurrentPlaying
+                        ? Math.min(100, Math.max(15, h + Math.sin(idx * 0.8) * 15))
+                        : 15;
+                      return (
+                        <div key={idx} className="relative flex-1 max-w-[10px] h-full flex flex-col justify-end">
+                          {/* Peak cap marker */}
+                          {isCurrentPlaying && (
+                            <span
+                              className={`absolute w-full h-[2px] rounded-full transition-all duration-150 ${
+                                idx > 18
+                                  ? 'bg-rose-400 shadow-[0_0_6px_#f43f5e]'
+                                  : soundDspMode === 'tube'
+                                  ? 'bg-yellow-300 shadow-[0_0_6px_#fde047]'
+                                  : soundDspMode === 'concert'
+                                  ? 'bg-cyan-300 shadow-[0_0_6px_#67e8f9]'
+                                  : 'bg-emerald-300 shadow-[0_0_6px_#6ee7b7]'
+                              }`}
+                              style={{
+                                bottom: `${Math.min(96, dynamicHeight + 8)}%`,
+                              }}
+                            />
+                          )}
+
+                          {/* LED Column */}
+                          <div
+                            className={`w-full rounded-t-xs transition-all duration-200 ${
+                              isCurrentPlaying
+                                ? idx > 20
+                                  ? 'bg-gradient-to-t from-amber-500 to-rose-500'
+                                  : soundDspMode === 'tube'
+                                  ? 'bg-gradient-to-t from-amber-600 via-amber-400 to-yellow-200'
+                                  : soundDspMode === 'concert'
+                                  ? 'bg-gradient-to-t from-indigo-600 via-purple-400 to-pink-300'
+                                  : 'bg-gradient-to-t from-emerald-600 via-teal-400 to-cyan-300'
+                                : 'bg-white/[0.08]'
+                            }`}
+                            style={{
+                              height: `${dynamicHeight}%`,
+                            }}
+                          />
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons Strip */}
+              <div className="mt-6 flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <button
+                  onClick={() => onPlayTrack(featuredTrack)}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer shadow-lg ${
+                    isCurrentPlaying
+                      ? 'bg-white text-neutral-950 hover:bg-neutral-200 shadow-white/20'
+                      : 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-neutral-950 shadow-[0_0_25px_rgba(245,158,11,0.5)] hover:shadow-[0_0_35px_rgba(245,158,11,0.7)]'
+                  }`}
+                >
+                  {isCurrentPlaying ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-neutral-950" />
+                      <span>일시정지</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-neutral-950 ml-0.5" />
+                      <span>지금 감상하기</span>
+                    </>
+                  )}
+                </button>
+
+                {onOpenCinemaStage && (
+                  <button
+                    onClick={() => {
+                      onPlayTrack(featuredTrack);
+                      onOpenCinemaStage(featuredTrack);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-red-950/50 to-neutral-900 hover:from-red-900/60 text-white border border-red-500/30 hover:border-red-500/50 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                    <span>시네마 무대</span>
+                  </button>
+                )}
+
+                {onOpenDiscPlayer && (
+                  <button
+                    onClick={() => {
+                      onPlayTrack(featuredTrack);
+                      onOpenDiscPlayer(featuredTrack);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-amber-950/40 to-neutral-900 hover:from-amber-900/50 text-amber-200 hover:text-white border border-amber-500/30 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                  >
+                    <Disc className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                    <span>LP 턴테이블</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => onToggleLike(featuredTrack.id)}
+                  className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    likedTrackIds.includes(featuredTrack.id)
+                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                      : 'bg-white/[0.04] text-neutral-400 hover:text-white border-white/[0.08]'
+                  }`}
+                  title="보관함 저장"
+                >
+                  <Heart className={`w-4 h-4 ${likedTrackIds.includes(featuredTrack.id) ? 'fill-rose-500' : ''}`} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    onAddToQueue(featuredTrack);
+                    showToast('대기열에 추가되었습니다');
+                  }}
+                  className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-neutral-400 hover:text-white border border-white/[0.08] transition-colors cursor-pointer"
+                  title="대기열 추가"
+                >
+                  <ListPlus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Main Categories Navigation Bar & Classifier */}
       <div className="space-y-3">
-        {/* Category Pills Header with Category Management */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-red-500" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider font-mono">
-              카테고리별 음악 분류 & 둘러보기
-            </h2>
-          </div>
+        {/* Category Header with Minimal Add Button */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-neutral-400 tracking-wider uppercase">
+            카테고리
+          </h2>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsCreatingCategory(!isCreatingCategory)}
-              className="px-2.5 py-1 text-xs font-bold rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-200 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <FolderPlus className="w-3.5 h-3.5 text-red-400" />
-              <span>+ 새 카테고리 추가</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsCreatingCategory(!isCreatingCategory)}
+            className="text-xs text-neutral-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <FolderPlus className="w-3.5 h-3.5" />
+            <span>새 카테고리</span>
+          </button>
         </div>
 
         {/* Inline Category Creator Form */}
         {isCreatingCategory && (
           <form
             onSubmit={handleCreateCategorySubmit}
-            className="p-3 bg-neutral-900 border border-neutral-800 rounded-2xl flex items-center gap-2 animate-fadeIn"
+            className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl flex items-center gap-2"
           >
             <input
               type="text"
               value={newCatEmoji}
               onChange={(e) => setNewCatEmoji(e.target.value)}
-              className="w-10 text-center bg-neutral-950 border border-neutral-800 rounded-xl py-1.5 text-sm"
-              title="이모지 변경"
+              className="w-10 text-center bg-black/40 border border-white/[0.08] rounded-lg py-1.5 text-sm"
+              title="아이콘"
             />
             <input
               type="text"
               value={newCatName}
               onChange={(e) => setNewCatName(e.target.value)}
-              placeholder="새 카테고리 이름 (예: 🏃 운동할 때, 🌙 심야 드라이브)"
-              className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-red-500"
+              placeholder="새 카테고리 이름"
+              className="flex-1 bg-black/40 border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/20"
               autoFocus
             />
             <button
               type="submit"
-              className="px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold text-xs rounded-xl shadow cursor-pointer whitespace-nowrap"
+              className="px-3.5 py-1.5 bg-white text-neutral-950 hover:bg-neutral-200 font-medium text-xs rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             >
-              카테고리 생성
+              생성
             </button>
             <button
               type="button"
               onClick={() => setIsCreatingCategory(false)}
-              className="p-1.5 text-neutral-400 hover:text-white"
+              className="p-1.5 text-neutral-400 hover:text-white cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </form>
         )}
 
-        {/* Scrollable Categories Strip */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-          {/* Preset Categories */}
+        {/* Scrollable Clean Categories Strip */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {SYSTEM_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
             return (
               <button
                 key={cat.id}
                 onClick={() => onCategoryChange(cat.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer shrink-0 border ${
                   isActive
-                    ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-102'
-                    : 'bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800'
+                    ? 'bg-white/10 text-white border-white/20 shadow-xs'
+                    : 'bg-white/[0.02] text-neutral-400 hover:text-white border-white/[0.06] hover:bg-white/[0.05]'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
                 <span>{cat.label}</span>
               </button>
             );
@@ -606,15 +861,15 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
               <button
                 key={c.id}
                 onClick={() => onCategoryChange(`category-${c.id}`)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 border ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap cursor-pointer shrink-0 border ${
                   isActive
-                    ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-transparent shadow-lg shadow-red-600/30'
-                    : 'bg-neutral-900 text-neutral-300 hover:text-white border-neutral-800 hover:bg-neutral-800'
+                    ? 'bg-white/10 text-white border-white/20 shadow-xs'
+                    : 'bg-white/[0.02] text-neutral-400 hover:text-white border-white/[0.06] hover:bg-white/[0.05]'
                 }`}
               >
                 <span>{c.icon}</span>
                 <span>{c.name}</span>
-                <span className="text-[10px] bg-black/40 px-1.5 py-0.2 rounded-full font-mono">
+                <span className="text-[10px] text-neutral-500 font-mono tabular-nums">
                   {c.trackIds.length}
                 </span>
               </button>
@@ -623,38 +878,38 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
         </div>
 
         {/* Filter & Sort Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-t border-neutral-800/80">
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1 p-1 bg-neutral-900 rounded-xl border border-neutral-800 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 pb-1 border-t border-white/[0.06]">
+          {/* Segmented Filter Control */}
+          <div className="flex items-center gap-1 p-0.5 bg-white/[0.03] rounded-lg border border-white/[0.06] text-xs">
             <button
               onClick={() => setFilterMode('all')}
-              className={`px-2.5 py-1 rounded-lg transition-colors font-semibold cursor-pointer ${
-                filterMode === 'all' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+              className={`px-2.5 py-1 rounded-md transition-colors font-medium cursor-pointer ${
+                filterMode === 'all' ? 'bg-white/10 text-white shadow-xs' : 'text-neutral-400 hover:text-white'
               }`}
             >
               전체
             </button>
             <button
               onClick={() => setFilterMode('mv')}
-              className={`px-2.5 py-1 rounded-lg transition-colors font-semibold cursor-pointer ${
-                filterMode === 'mv' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+              className={`px-2.5 py-1 rounded-md transition-colors font-medium cursor-pointer ${
+                filterMode === 'mv' ? 'bg-white/10 text-white shadow-xs' : 'text-neutral-400 hover:text-white'
               }`}
             >
               공식 MV
             </button>
             <button
               onClick={() => setFilterMode('live')}
-              className={`px-2.5 py-1 rounded-lg transition-colors font-semibold cursor-pointer ${
-                filterMode === 'live' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+              className={`px-2.5 py-1 rounded-md transition-colors font-medium cursor-pointer ${
+                filterMode === 'live' ? 'bg-white/10 text-white shadow-xs' : 'text-neutral-400 hover:text-white'
               }`}
             >
               라이브 무대
             </button>
             <button
               onClick={() => setFilterMode('playlist')}
-              className={`px-2.5 py-1 rounded-lg transition-colors font-semibold cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md transition-colors font-medium cursor-pointer ${
                 filterMode === 'playlist'
-                  ? 'bg-neutral-800 text-white'
+                  ? 'bg-white/10 text-white shadow-xs'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -664,41 +919,41 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
 
           {/* Sort & View Mode Switcher */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-xs text-neutral-400 bg-neutral-900 px-2 py-1 rounded-xl border border-neutral-800">
-              <ArrowUpDown className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1 text-xs text-neutral-400 bg-white/[0.03] px-2.5 py-1 rounded-lg border border-white/[0.06]">
+              <ArrowUpDown className="w-3.5 h-3.5 text-neutral-500" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="bg-transparent text-neutral-200 focus:outline-none cursor-pointer text-xs"
               >
-                <option value="curated" className="bg-neutral-900">
+                <option value="curated" className="bg-[#121216]">
                   추천순
                 </option>
-                <option value="views" className="bg-neutral-900">
-                  인기 조회수순
+                <option value="views" className="bg-[#121216]">
+                  조회수순
                 </option>
-                <option value="title" className="bg-neutral-900">
-                  곡명 가나다순
+                <option value="title" className="bg-[#121216]">
+                  제목순
                 </option>
               </select>
             </div>
 
-            <div className="flex items-center p-1 bg-neutral-900 rounded-xl border border-neutral-800">
+            <div className="flex items-center p-0.5 bg-white/[0.03] rounded-lg border border-white/[0.06]">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                  viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white'
                 }`}
-                title="그리드 카드 뷰"
+                title="그리드 보기"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'list' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white'
+                className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                  viewMode === 'list' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white'
                 }`}
-                title="목록 리스트 뷰"
+                title="목록 보기"
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -793,6 +1048,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                   copiedId={copiedId}
                   onPlayTrack={onPlayTrack}
                   onOpenCinemaStage={onOpenCinemaStage}
+                  onOpenDiscPlayer={onOpenDiscPlayer}
                   onToggleLike={onToggleLike}
                   onQueueClick={handleQueueClick}
                   onCopyLink={handleCopyLink}
@@ -872,6 +1128,20 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                       <Tv className="w-3.5 h-3.5" />
                       <span className="hidden sm:inline">시네마</span>
                     </button>
+
+                    {onOpenDiscPlayer && (
+                      <button
+                        onClick={() => {
+                          onPlayTrack(trk);
+                          onOpenDiscPlayer(trk);
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-rose-300 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        title="감성 턴테이블 모드로 열기"
+                      >
+                        <Disc className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="hidden sm:inline">LP</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => onToggleLike(trk.id)}
                       className={`p-2 rounded-lg transition-colors cursor-pointer ${
@@ -963,6 +1233,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                   copiedId={copiedId}
                   onPlayTrack={onPlayTrack}
                   onOpenCinemaStage={onOpenCinemaStage}
+                  onOpenDiscPlayer={onOpenDiscPlayer}
                   onToggleLike={onToggleLike}
                   onQueueClick={handleQueueClick}
                   onCopyLink={handleCopyLink}
@@ -1018,6 +1289,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                   copiedId={copiedId}
                   onPlayTrack={onPlayTrack}
                   onOpenCinemaStage={onOpenCinemaStage}
+                  onOpenDiscPlayer={onOpenDiscPlayer}
                   onToggleLike={onToggleLike}
                   onQueueClick={handleQueueClick}
                   onCopyLink={handleCopyLink}
@@ -1035,18 +1307,17 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
           {/* Active Results Title Bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Youtube className="w-5 h-5 text-red-500" />
-              <h2 className="text-base sm:text-lg font-bold text-white">
+              <h2 className="text-sm sm:text-base font-semibold text-white tracking-tight">
                 {activeCategory === 'trending'
-                  ? '인기 MV 차트'
+                  ? '인기 차트'
                   : activeCategory === 'night'
-                  ? '🌙 새벽 감성 힐링곡 모음'
+                  ? '새벽 감성'
                   : activeCategory === 'drive'
-                  ? '🚗 신나는 드라이브 믹스'
+                  ? '드라이브'
                   : activeCategory === 'coding'
-                  ? '💻 집중 코딩 노동요'
+                  ? '집중 & 코딩'
                   : activeCategory === 'kpop'
-                  ? 'K-POP 아이돌'
+                  ? 'K-Pop'
                   : activeCategory === 'hiphop'
                   ? '힙합 & R&B'
                   : activeCategory === 'indie'
@@ -1054,18 +1325,18 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                   : activeCategory === 'ballad'
                   ? '감성 발라드'
                   : activeCategory === 'lofi'
-                  ? '로파이 & 칠'
+                  ? '로파이'
                   : activeCategory === 'citypop'
-                  ? '시티팝 드라이브'
+                  ? '시티팝'
                   : activeCategory === 'ost'
                   ? '드라마 OST'
                   : activeCategory === 'live'
-                  ? '4K 직캠 & 라이브 무대'
+                  ? '라이브 & 직캠'
                   : activeCategory === 'mixes'
-                  ? '모음 플레이리스트'
+                  ? '플레이리스트'
                   : `"${searchQuery || '실시간 탐색'}"`}
               </h2>
-              <span className="text-xs font-mono text-neutral-400 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-mono tabular-nums text-neutral-500">
                 {sortedSearchResults.length}곡
               </span>
             </div>
@@ -1111,6 +1382,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                     copiedId={copiedId}
                     onPlayTrack={onPlayTrack}
                     onOpenCinemaStage={onOpenCinemaStage}
+                    onOpenDiscPlayer={onOpenDiscPlayer}
                     onToggleLike={onToggleLike}
                     onQueueClick={handleQueueClick}
                     onCopyLink={handleCopyLink}
@@ -1201,6 +1473,20 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                         <span className="hidden sm:inline">시네마</span>
                       </button>
 
+                      {onOpenDiscPlayer && (
+                        <button
+                          onClick={() => {
+                            onPlayTrack(track);
+                            onOpenDiscPlayer(track);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-rose-300 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="감성 턴테이블 모드로 열기"
+                        >
+                          <Disc className="w-3.5 h-3.5 text-rose-400" />
+                          <span className="hidden sm:inline">LP</span>
+                        </button>
+                      )}
+
                       <button
                         onClick={() => onToggleLike(track.id)}
                         className={`p-2 rounded-lg transition-colors cursor-pointer ${
@@ -1290,6 +1576,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                       copiedId={copiedId}
                       onPlayTrack={onPlayTrack}
                       onOpenCinemaStage={onOpenCinemaStage}
+                      onOpenDiscPlayer={onOpenDiscPlayer}
                       onToggleLike={onToggleLike}
                       onQueueClick={handleQueueClick}
                       onCopyLink={handleCopyLink}
@@ -1347,6 +1634,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                       copiedId={copiedId}
                       onPlayTrack={onPlayTrack}
                       onOpenCinemaStage={onOpenCinemaStage}
+                      onOpenDiscPlayer={onOpenDiscPlayer}
                       onToggleLike={onToggleLike}
                       onQueueClick={handleQueueClick}
                       onCopyLink={handleCopyLink}
@@ -1404,6 +1692,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                       copiedId={copiedId}
                       onPlayTrack={onPlayTrack}
                       onOpenCinemaStage={onOpenCinemaStage}
+                      onOpenDiscPlayer={onOpenDiscPlayer}
                       onToggleLike={onToggleLike}
                       onQueueClick={handleQueueClick}
                       onCopyLink={handleCopyLink}
@@ -1448,6 +1737,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                         copiedId={copiedId}
                         onPlayTrack={onPlayTrack}
                         onOpenCinemaStage={onOpenCinemaStage}
+                        onOpenDiscPlayer={onOpenDiscPlayer}
                         onToggleLike={onToggleLike}
                         onQueueClick={handleQueueClick}
                         onCopyLink={handleCopyLink}
@@ -1493,6 +1783,7 @@ export const YouTubeExploreView: React.FC<YouTubeExploreViewProps> = ({
                         copiedId={copiedId}
                         onPlayTrack={onPlayTrack}
                         onOpenCinemaStage={onOpenCinemaStage}
+                        onOpenDiscPlayer={onOpenDiscPlayer}
                         onToggleLike={onToggleLike}
                         onQueueClick={handleQueueClick}
                         onCopyLink={handleCopyLink}
@@ -1519,6 +1810,7 @@ interface TrackCardProps {
   copiedId: string | null;
   onPlayTrack: (track: Track) => void;
   onOpenCinemaStage: (track: Track) => void;
+  onOpenDiscPlayer?: (track: Track) => void;
   onToggleLike: (trackId: string) => void;
   onQueueClick: (track: Track) => void;
   onCopyLink: (videoId: string) => void;
@@ -1534,6 +1826,7 @@ const TrackCard: React.FC<TrackCardProps> = ({
   copiedId,
   onPlayTrack,
   onOpenCinemaStage,
+  onOpenDiscPlayer,
   onToggleLike,
   onQueueClick,
   onCopyLink,
@@ -1542,10 +1835,16 @@ const TrackCard: React.FC<TrackCardProps> = ({
   const videoId = track.youtubeId || (rawItem && rawItem.videoId) || '';
 
   return (
-    <div className="group relative bg-neutral-900/40 hover:bg-neutral-900/90 border border-neutral-800/80 hover:border-neutral-700 rounded-2xl p-3.5 transition-all duration-300 flex flex-col justify-between shadow-lg hover:shadow-2xl hover:-translate-y-1">
+    <div
+      className={`group relative rounded-xl p-3 transition-all duration-300 flex flex-col justify-between ${
+        isPlayingThis
+          ? 'bg-[#15151c] border border-amber-500/50 shadow-[0_12px_36px_-6px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/20'
+          : 'bg-[#111114]/80 hover:bg-[#16161c] border border-white/[0.06] hover:border-amber-400/30 hover:shadow-[0_14px_40px_-8px_rgba(245,158,11,0.15)] hover:-translate-y-0.5'
+      }`}
+    >
       <div>
-        {/* Video Thumbnail with Badges & Hover Play Overlay */}
-        <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-3 bg-neutral-950">
+        {/* Video Thumbnail with Dynamic Glow */}
+        <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-2.5 bg-neutral-950">
           <img
             src={track.coverUrl}
             alt={track.title}
@@ -1553,80 +1852,69 @@ const TrackCard: React.FC<TrackCardProps> = ({
             referrerPolicy="no-referrer"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20 opacity-80 group-hover:opacity-90 transition-opacity" />
+          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/45 transition-colors" />
 
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex items-center gap-1.5">
-            <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow">
-              HD
-            </span>
-          </div>
+          {/* Now Playing Live Audio Status Pill */}
+          {isPlayingThis && (
+            <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/85 backdrop-blur-md border border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-[9px] font-mono font-bold text-amber-300 tracking-wider">NOW PLAYING</span>
+            </div>
+          )}
 
-          <div className="absolute bottom-2 right-2 bg-black/85 backdrop-blur-sm text-white text-[11px] font-mono px-2 py-0.5 rounded border border-white/10">
+          {/* Clean duration badge */}
+          <div className="absolute bottom-1.5 right-1.5 bg-black/80 backdrop-blur-xs text-neutral-200 text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border border-white/10">
             {rawItem?.duration ||
               `${Math.floor(track.duration / 60)}:${(track.duration % 60)
                 .toString()
                 .padStart(2, '0')}`}
           </div>
 
-          {/* Hover Play & Cinema Stage overlay */}
+          {/* Glamorous Hover Play Overlay */}
           <div
-            className={`absolute inset-0 flex items-center justify-center gap-3 transition-opacity ${
+            onClick={() => onPlayTrack(track)}
+            className={`absolute inset-0 flex items-center justify-center transition-opacity cursor-pointer ${
               isPlayingThis
-                ? 'opacity-100 bg-black/60'
-                : 'opacity-0 group-hover:opacity-100 bg-black/40'
+                ? 'opacity-100 bg-black/55'
+                : 'opacity-0 group-hover:opacity-100 bg-black/35'
             }`}
           >
-            <button
-              onClick={() => onPlayTrack(track)}
-              className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl transform active:scale-95 transition-transform cursor-pointer"
-              title="즉시 재생"
-            >
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-neutral-950 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.6)] transition-transform hover:scale-110 active:scale-95">
               {isPlayingThis ? (
-                <div className="flex gap-1 items-end h-3.5">
-                  <span className="w-1 bg-white h-full animate-bounce" />
-                  <span className="w-1 bg-white h-2/3 animate-bounce delay-75" />
-                  <span className="w-1 bg-white h-4/5 animate-bounce delay-150" />
+                <div className="flex gap-1 items-end h-4">
+                  <span className="w-1 bg-neutral-950 h-full animate-bounce" />
+                  <span className="w-1 bg-neutral-950 h-2/3 animate-bounce delay-75" />
+                  <span className="w-1 bg-neutral-950 h-4/5 animate-bounce delay-150" />
                 </div>
               ) : (
-                <Play className="w-4 h-4 fill-white ml-0.5" />
+                <Play className="w-4 h-4 fill-neutral-950 ml-0.5" />
               )}
-            </button>
-
-            <button
-              onClick={() => {
-                onPlayTrack(track);
-                onOpenCinemaStage(track);
-              }}
-              className="w-10 h-10 rounded-full bg-neutral-900/90 hover:bg-neutral-800 text-cyan-300 flex items-center justify-center shadow-xl border border-cyan-500/40 transform active:scale-95 transition-transform cursor-pointer"
-              title="시네마 무대 모드로 감상"
-            >
-              <Tv className="w-4 h-4" />
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* Title & Channel */}
+        {/* Title & Artist */}
         <h3
           onClick={() => {
             onPlayTrack(track);
             onOpenCinemaStage(track);
           }}
-          className="text-xs sm:text-sm font-semibold text-neutral-100 group-hover:text-red-400 line-clamp-2 leading-snug cursor-pointer transition-colors"
+          className="text-xs sm:text-sm font-semibold text-neutral-100 group-hover:text-amber-200 line-clamp-2 leading-snug cursor-pointer transition-colors"
           title={track.title}
         >
           {track.title}
         </h3>
 
-        <p className="text-xs text-neutral-400 mt-1 truncate flex items-center gap-1">
-          <span>{track.artist}</span>
+        <p className="text-xs text-neutral-400 mt-1 truncate">
+          {track.artist}
         </p>
 
-        <div className="flex items-center gap-2 text-[10px] font-mono text-neutral-500 mt-1">
+        {/* Clean Unboxed Metadata */}
+        <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 mt-1 tabular-nums">
           {rawItem?.viewCount && <span>{rawItem.viewCount}</span>}
           {rawItem?.publishedTime && (
             <>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <span>{rawItem.publishedTime}</span>
             </>
           )}
@@ -1634,25 +1922,41 @@ const TrackCard: React.FC<TrackCardProps> = ({
       </div>
 
       {/* Bottom Action Strip */}
-      <div className="mt-3.5 pt-2.5 border-t border-neutral-800/80 flex items-center justify-between text-xs">
-        <button
-          onClick={() => {
-            onPlayTrack(track);
-            onOpenCinemaStage(track);
-          }}
-          className="flex items-center gap-1 text-neutral-400 hover:text-cyan-300 transition-colors py-0.5 cursor-pointer"
-          title="시네마 무대 모드로 열기"
-        >
-          <Tv className="w-3.5 h-3.5 text-red-500" />
-          <span className="text-[11px] font-semibold">시네마</span>
-        </button>
+      <div className="mt-3 pt-2 border-t border-white/[0.05] flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              onPlayTrack(track);
+              onOpenCinemaStage(track);
+            }}
+            className="flex items-center gap-1 text-neutral-400 hover:text-white transition-colors py-0.5 cursor-pointer text-[11px]"
+            title="시네마 무대"
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span>시네마</span>
+          </button>
 
-        <div className="flex items-center gap-1">
-          {/* Classify into Category Button */}
+          {onOpenDiscPlayer && (
+            <button
+              onClick={() => {
+                onPlayTrack(track);
+                onOpenDiscPlayer(track);
+              }}
+              className="flex items-center gap-1 text-neutral-400 hover:text-white transition-colors py-0.5 cursor-pointer text-[11px]"
+              title="LP 턴테이블"
+            >
+              <Disc className="w-3.5 h-3.5" />
+              <span>LP</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-0.5">
+          {/* Classify Button */}
           <button
             onClick={() => onOpenClassifyModal(track)}
-            className="p-1.5 text-neutral-400 hover:text-amber-400 rounded-lg transition-colors cursor-pointer"
-            title="카테고리에 분류하기"
+            className="p-1 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
+            title="카테고리 분류"
           >
             <Tag className="w-3.5 h-3.5" />
           </button>
@@ -1660,8 +1964,8 @@ const TrackCard: React.FC<TrackCardProps> = ({
           {videoId && (
             <button
               onClick={() => onCopyLink(videoId)}
-              className="p-1.5 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
-              title={copiedId === videoId ? '링크 복사 완료!' : 'YouTube 링크 복사'}
+              className="p-1 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
+              title={copiedId === videoId ? '복사됨' : '링크 복사'}
             >
               {copiedId === videoId ? (
                 <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -1673,8 +1977,8 @@ const TrackCard: React.FC<TrackCardProps> = ({
 
           <button
             onClick={() => onToggleLike(track.id)}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-              isLiked ? 'text-rose-500' : 'text-neutral-400 hover:text-rose-400'
+            className={`p-1 transition-colors cursor-pointer ${
+              isLiked ? 'text-rose-500' : 'text-neutral-500 hover:text-rose-400'
             }`}
             title="좋아요"
           >
@@ -1683,8 +1987,8 @@ const TrackCard: React.FC<TrackCardProps> = ({
 
           <button
             onClick={() => onQueueClick(track)}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-              addedQueueId === track.id ? 'text-emerald-400' : 'text-neutral-400 hover:text-white'
+            className={`p-1 transition-colors cursor-pointer ${
+              addedQueueId === track.id ? 'text-emerald-400' : 'text-neutral-500 hover:text-neutral-200'
             }`}
             title="대기열 추가"
           >
@@ -1693,13 +1997,6 @@ const TrackCard: React.FC<TrackCardProps> = ({
             ) : (
               <ListPlus className="w-3.5 h-3.5" />
             )}
-          </button>
-
-          <button
-            onClick={() => onPlayTrack(track)}
-            className="px-2 py-0.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
-          >
-            재생
           </button>
         </div>
       </div>

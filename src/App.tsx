@@ -8,6 +8,7 @@ import { LyricsModal } from './components/AudioPlayer/LyricsModal';
 import { QueueModal } from './components/AudioPlayer/QueueModal';
 import { CinemaStageModal } from './components/AudioPlayer/CinemaStageModal';
 import { ExpandedPlayer } from './components/AudioPlayer/ExpandedPlayer';
+import { EmotionalDiscModal } from './components/AudioPlayer/EmotionalDiscModal';
 import { YouTubeExploreView } from './components/Views/YouTubeExploreView';
 import {
   YouTubePlayerDock,
@@ -92,6 +93,7 @@ export default function App() {
   const [isQueueOpen, setIsQueueOpen] = useState(false);
   const [isExpandedPlayerOpen, setIsExpandedPlayerOpen] = useState(false);
   const [isCinemaStageOpen, setIsCinemaStageOpen] = useState(false);
+  const [isDiscPlayerOpen, setIsDiscPlayerOpen] = useState(false);
 
   // Sync user categories when user changes
   useEffect(() => {
@@ -360,6 +362,16 @@ export default function App() {
       .filter((t): t is Track => t !== undefined);
   }, [tracks, likedTrackIds]);
 
+  // One-click intuitive DiscPlayer launcher (automatically plays if idle)
+  const handleOpenDiscPlayerDirectly = useCallback(() => {
+    if (!currentTrack && tracks.length > 0) {
+      handlePlayTrack(tracks[0]);
+    } else if (currentTrack && !isPlaying) {
+      handlePlayPause();
+    }
+    setIsDiscPlayerOpen(true);
+  }, [currentTrack, tracks, isPlaying, handlePlayTrack, handlePlayPause]);
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-red-500/30 selection:text-red-200">
       {/* Top Navbar: Dedicated to YouTube Exploration, Categories & Auth */}
@@ -379,6 +391,7 @@ export default function App() {
         hasActiveTrack={!!currentTrack}
         isPlaying={isPlaying}
         onOpenCinemaStage={() => setIsCinemaStageOpen(true)}
+        onOpenDiscPlayer={handleOpenDiscPlayerDirectly}
         currentUser={currentUser}
         onOpenAuth={handleOpenAuth}
         onLogout={handleLogout}
@@ -408,6 +421,10 @@ export default function App() {
           onOpenCinemaStage={(t) => {
             handlePlayTrack(t);
             setIsCinemaStageOpen(true);
+          }}
+          onOpenDiscPlayer={(t) => {
+            handlePlayTrack(t);
+            setIsDiscPlayerOpen(true);
           }}
           onToggleLike={handleToggleLike}
           onClearHistory={handleClearHistory}
@@ -447,7 +464,38 @@ export default function App() {
         onOpenQueue={() => setIsQueueOpen(true)}
         onOpenExpanded={() => setIsExpandedPlayerOpen(true)}
         onOpenCinemaStage={() => setIsCinemaStageOpen(true)}
+        onOpenDiscPlayer={() => setIsDiscPlayerOpen(true)}
       />
+
+      {/* Framer DiscPlayer - Emotional Vinyl Turntable Modal */}
+      {isDiscPlayerOpen && currentTrack && (
+        <EmotionalDiscModal
+          track={currentTrack}
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          duration={currentTrack.duration || 180}
+          isLiked={likedTrackIds.includes(currentTrack.id)}
+          isOpen={isDiscPlayerOpen}
+          onClose={() => setIsDiscPlayerOpen(false)}
+          onPlayPause={handlePlayPause}
+          onSeek={handleSeek}
+          onPrev={handlePrevTrack}
+          onNext={handleNextTrack}
+          onToggleLike={handleToggleLike}
+          onOpenCinemaStage={() => {
+            setIsDiscPlayerOpen(false);
+            setIsCinemaStageOpen(true);
+          }}
+          onOpenLyrics={() => {
+            setIsDiscPlayerOpen(false);
+            setIsLyricsOpen(true);
+          }}
+          onOpenQueue={() => {
+            setIsDiscPlayerOpen(false);
+            setIsQueueOpen(true);
+          }}
+        />
+      )}
 
       {/* Ultra-Cool YouTube Cinema Stage Modal */}
       {isCinemaStageOpen && currentTrack && (
